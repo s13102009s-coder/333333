@@ -1,0 +1,54 @@
+USE Academy;
+
+-- 1. Создание таблицы student_group, если её ещё нет
+CREATE TABLE IF NOT EXISTS student_group (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_name VARCHAR(100)
+);
+
+-- 2. Создание функции генерации названия группы
+DELIMITER //
+
+CREATE FUNCTION fn_generate_group()
+RETURNS VARCHAR(100)
+NOT DETERMINISTIC
+BEGIN
+    DECLARE group_name VARCHAR(100);
+
+    SET group_name = CONCAT(
+        ELT(FLOOR(1 + RAND() * 5),
+            'IT',
+            'WEB',
+            'DB',
+            'CS',
+            'DEV'
+        ),
+        '-',
+        FLOOR(100 + RAND() * 900)
+    );
+
+    RETURN group_name;
+END //
+
+-- 3. Создание хранимой процедуры
+CREATE PROCEDURE ps_student_groups_insert(IN amount INT)
+BEGIN
+    DECLARE counter INT DEFAULT 1;
+
+    WHILE counter <= amount DO
+
+        INSERT INTO student_group (group_name)
+        VALUES (fn_generate_group());
+
+        SET counter = counter + 1;
+
+    END WHILE;
+END //
+
+DELIMITER ;
+
+-- 4. Заполнение таблицы 20 записями
+CALL ps_student_groups_insert(20);
+
+-- 5. Проверка результата
+SELECT * FROM student_group;
